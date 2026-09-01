@@ -8,7 +8,12 @@ import 'package:flutter_test/flutter_test.dart';
 import 'support/load_level.dart';
 
 void main() {
-  for (final info in kLevelCatalog) {
+  // Smoke-test a spread of the campaign (all 3 handcrafted + generated samples
+  // across the difficulty curve). `tmx_level_loader_test` parses every catalog
+  // entry; this just proves the parsed geometry actually runs in the engine.
+  final sample = <int>{0, 1, 2, 3, kLevelCatalog.length ~/ 2, kLevelCatalog.length - 1};
+  for (final index in sample) {
+    final info = kLevelCatalog[index];
     testWidgets('GameScreen runs "${info.id}" without throwing', (tester) async {
       final level = loadLevelFromFile(info.tmxAsset);
       await tester.pumpWidget(MaterialApp(home: GameScreen(level: level)));

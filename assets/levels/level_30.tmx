@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<map version="1.10" tiledversion="1.11.0" orientation="orthogonal" renderorder="right-down" width="20" height="12" tilewidth="48" tileheight="48" infinite="0" nextlayerid="3" nextobjectid="12">
+ <properties>
+  <property name="title" value="Màn 30 — Trùng Khơi"/>
+  <property name="background" value="game/level_01_background.png"/>
+  <property name="startingLives" type="int" value="26"/>
+  <property name="startingGold" type="int" value="190"/>
+  <property name="timeBetweenWaves" type="float" value="3.0"/>
+  <property name="towers" value="arrow,cannon,flamingArrow"/>
+  <property name="enemyHp" type="float" value="735"/>
+  <property name="enemySpeed" type="float" value="79"/>
+  <property name="enemyGold" type="int" value="14"/>
+  <property name="enemyLives" type="int" value="1"/>
+  <property name="waves" value="16@0.44;17@0.42;18@0.40;10@0.38+9@0.61;20@0.36;21@0.34;22@0.32;12@0.30+11@0.48;24@0.28;25@0.26;26@0.24;14@0.22+13@0.35;28@0.22;29@0.22;30@0.22;16@0.22+15@0.35;32@0.22;19@0.22+18@0.35"/>
+ </properties>
+ <objectgroup id="1" name="path">
+  <object id="1" name="river" x="0" y="0">
+   <polyline points="984,72 72,72 72,264 888,264 888,456 -24,456"/>
+  </object>
+ </objectgroup>
+ <objectgroup id="2" name="buildspots">
+  <object id="2" x="792" y="168"><point/></object>
+  <object id="3" x="504" y="168"><point/></object>
+  <object id="4" x="216" y="168"><point/></object>
+  <object id="5" x="744" y="360"><point/></object>
+  <object id="6" x="456" y="360"><point/></object>
+  <object id="7" x="168" y="360"><point/></object>
+  <object id="8" x="648" y="552"><point/></object>
+  <object id="9" x="360" y="552"><point/></object>
+  <object id="10" x="120" y="168"><point/></object>
+ </objectgroup>
+</map>

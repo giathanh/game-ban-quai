@@ -1,6 +1,9 @@
+import 'dart:math' as math;
+
 import 'package:ban_heo/features/game/data/levels/level_catalog.dart';
 import 'package:ban_heo/features/game/data/levels/tmx_level_loader.dart';
 import 'package:ban_heo/features/game/domain/models/level.dart';
+import 'package:flame/components.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'support/load_level.dart';
@@ -82,14 +85,51 @@ void main() {
     );
   });
 
-  test('every catalog .tmx parses into a runnable level', () {
+  test('every catalog .tmx parses into a runnable, well-formed level', () {
     for (final info in kLevelCatalog) {
       final LevelData level = loadLevelFromFile(info.tmxAsset);
       expect(level.pathCells.length, greaterThanOrEqualTo(2), reason: info.id);
-      expect(level.buildSpotCells, isNotEmpty, reason: info.id);
+      expect(level.buildSpotCells.length, greaterThanOrEqualTo(4),
+          reason: info.id);
       expect(level.waves, isNotEmpty, reason: info.id);
       expect(level.towers, isNotEmpty, reason: info.id);
       expect(level.startingLives, greaterThan(0), reason: info.id);
+      expect(level.enemy.maxHp, greaterThan(0), reason: info.id);
+
+      // Build spots must be inside the grid and clear of the river, else towers
+      // render on top of the path / off-screen.
+      for (final spot in level.buildSpotCells) {
+        expect(
+          spot.x >= 0 &&
+              spot.x <= level.gridCols - 1 &&
+              spot.y >= 0 &&
+              spot.y <= level.gridRows - 1,
+          isTrue,
+          reason: '${info.id}: build spot $spot outside grid',
+        );
+        expect(
+          _minCellsToPath(spot, level.pathCells),
+          greaterThan(0.6),
+          reason: '${info.id}: build spot $spot sits on the river',
+        );
+      }
     }
   });
+}
+
+/// Shortest distance (in cells) from [p] to any segment of the polyline [path].
+double _minCellsToPath(Vector2 p, List<Vector2> path) {
+  var best = double.infinity;
+  for (var i = 0; i < path.length - 1; i++) {
+    final a = path[i];
+    final b = path[i + 1];
+    final ab = b - a;
+    final lenSq = ab.length2;
+    final t = lenSq == 0
+        ? 0.0
+        : (((p - a).dot(ab)) / lenSq).clamp(0.0, 1.0).toDouble();
+    final proj = a + ab * t;
+    best = math.min(best, (p - proj).length);
+  }
+  return best;
 }
