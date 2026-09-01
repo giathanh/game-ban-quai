@@ -36,6 +36,8 @@ analyzer:
     - "build/**"
     - "lib/generated/**"
     - "test/tmp_probe/**"
+    # Codegen scripts: run manually, not held to app style rules.
+    - "tool/**"
 
 linter:
   rules:

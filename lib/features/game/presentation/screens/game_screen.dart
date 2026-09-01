@@ -1,6 +1,11 @@
+import 'dart:async';
+
 import 'package:flame/game.dart';
 import 'package:flutter/material.dart';
 
+import '../../../upgrades/data/upgrade_store.dart';
+import '../../../upgrades/domain/upgrade_levels.dart';
+import '../../data/progress_store.dart';
 import '../../domain/models/level.dart';
 import '../../engine/ban_heo_game.dart';
 import '../widgets/build_menu.dart';
@@ -8,9 +13,39 @@ import '../widgets/game_hud.dart';
 import '../widgets/pause_overlay.dart';
 
 class GameScreen extends StatefulWidget {
-  const GameScreen({required this.level, super.key});
+  const GameScreen({
+    required this.level,
+    this.levelIndex,
+    this.levelId,
+    this.upgrades = UpgradeLevels.none,
+    this.onReplay,
+    this.onNext,
+    super.key,
+  }) : assert(
+         (levelId == null) == (levelIndex == null),
+         'levelId and levelIndex must be supplied together (campaign context) '
+         'or both omitted (standalone / test)',
+       );
 
   final LevelData level;
+
+  /// Position of this level in the campaign catalog, or null when launched
+  /// outside it (e.g. a test). Drives progress saving.
+  final int? levelIndex;
+
+  /// Stable catalog id (`level_07`), or null outside the campaign. Drives the
+  /// upgrade-point award on a first clear.
+  final String? levelId;
+
+  /// Global tower buffs to apply this round.
+  final UpgradeLevels upgrades;
+
+  /// Restart the current level. Null hides the retry action.
+  final VoidCallback? onReplay;
+
+  /// Advance to the next level. Null when there is none (last level / no
+  /// campaign context) — the win dialog then offers "back to menu" instead.
+  final VoidCallback? onNext;
 
   @override
   State<GameScreen> createState() => _GameScreenState();
@@ -19,6 +54,7 @@ class GameScreen extends StatefulWidget {
 class _GameScreenState extends State<GameScreen> {
   late final BanHeoGame _game = BanHeoGame(
     level: widget.level,
+    upgrades: widget.upgrades,
     onGameOver: _onGameOver,
   );
 
@@ -42,44 +78,85 @@ class _GameScreenState extends State<GameScreen> {
     });
   }
 
-  void _onGameOver(GameResult result) {
+  Future<void> _onGameOver(GameResult result) async {
     if (_resultShown) {
       return;
     }
     _resultShown = true;
+
+    final won = result == GameResult.won;
+
+    if (won && widget.levelIndex != null) {
+      // Fire-and-forget: the picker re-reads progress when we pop back to it.
+      unawaited(ProgressStore.markCompleted(widget.levelIndex!));
+    }
+
+    var award = AwardResult.none;
+    if (won && widget.levelId != null) {
+      try {
+        award = await UpgradeStore.awardForClear(
+          levelId: widget.levelId!,
+          levelIndex: widget.levelIndex ?? 0,
+          flawless: _game.lives.value == widget.level.startingLives,
+        );
+      } catch (_) {
+        // A prefs failure (blocked storage / private browsing on web) must
+        // never gate the result dialog — the player just gets no points.
+        award = AwardResult.none;
+      }
+    }
+
+    if (!mounted) {
+      return;
+    }
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) {
         return;
+      }
+      final showNext = won && widget.onNext != null;
+      final buffer = StringBuffer(
+        won
+            ? 'Bạn đã chặn hết ${widget.level.waves.length} đợt heo. Giỏi lắm!'
+            : 'Đàn heo đã tràn qua. Thử lại nhé!',
+      );
+      if (award.points > 0) {
+        buffer.write('\n\n+${award.points} điểm nâng cấp!');
+        if (award.flawlessGranted) {
+          buffer.write('\nKhông rò con nào — thưởng thêm 1 điểm!');
+        }
       }
       showDialog<void>(
         context: context,
         barrierDismissible: false,
         builder: (dialogContext) => AlertDialog(
-          title: Text(result == GameResult.won ? 'Thắng!' : 'Thua'),
-          content: Text(
-            result == GameResult.won
-                ? 'Bạn đã chặn hết 5 wave heo. Giỏi lắm!'
-                : 'Đàn heo đã tràn qua. Thử lại nhé!',
-          ),
+          title: Text(won ? 'Thắng!' : 'Thua'),
+          content: Text(buffer.toString()),
           actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(dialogContext).pop();
-                Navigator.of(context).pushReplacement(
-                  MaterialPageRoute<void>(
-                    builder: (_) => GameScreen(level: widget.level),
-                  ),
-                );
-              },
-              child: const Text('Chơi lại'),
-            ),
-            FilledButton(
-              onPressed: () {
-                Navigator.of(dialogContext).pop();
-                Navigator.of(context).popUntil((route) => route.isFirst);
-              },
-              child: const Text('Về menu'),
-            ),
+            if (widget.onReplay != null)
+              TextButton(
+                onPressed: () {
+                  Navigator.of(dialogContext).pop();
+                  widget.onReplay!();
+                },
+                child: const Text('Chơi lại'),
+              ),
+            if (showNext)
+              FilledButton(
+                onPressed: () {
+                  Navigator.of(dialogContext).pop();
+                  widget.onNext!();
+                },
+                child: const Text('Màn tiếp theo'),
+              )
+            else
+              FilledButton(
+                onPressed: () {
+                  Navigator.of(dialogContext).pop();
+                  Navigator.of(context).popUntil((route) => route.isFirst);
+                },
+                child: const Text('Về menu'),
+              ),
           ],
         ),
       );

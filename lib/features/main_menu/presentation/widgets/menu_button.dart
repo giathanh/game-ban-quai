@@ -6,6 +6,7 @@ class MenuButton extends StatelessWidget {
     required this.onPressed,
     required this.icon,
     this.primary = false,
+    this.badge,
     super.key,
   });
 
@@ -13,6 +14,10 @@ class MenuButton extends StatelessWidget {
   final VoidCallback onPressed;
   final IconData icon;
   final bool primary;
+
+  /// Optional trailing pill (e.g. the unspent upgrade-point count). Hidden when
+  /// null.
+  final String? badge;
 
   @override
   Widget build(BuildContext context) {
@@ -48,7 +53,30 @@ class MenuButton extends StatelessWidget {
         onPressed: onPressed,
         style: style,
         icon: Icon(icon, size: 24),
-        label: Text(label),
+        label: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(label),
+            if (badge != null) ...[
+              const SizedBox(width: 10),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(11),
+                ),
+                child: Text(
+                  badge!,
+                  style: TextStyle(
+                    color: shadow,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+              ),
+            ],
+          ],
+        ),
       ),
     );
   }

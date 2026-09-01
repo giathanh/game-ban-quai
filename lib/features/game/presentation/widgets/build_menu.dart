@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../upgrades/domain/upgrade_math.dart';
 import '../../domain/models/level.dart';
 import '../../engine/ban_heo_game.dart';
 import '../../engine/components/build_spot.dart';
@@ -58,6 +59,8 @@ class _BuildView extends StatelessWidget {
         for (final tower in game.level.towers) ...[
           _TowerOption(
             tower: tower,
+            effective: applyUpgrades(tower, game.upgrades),
+            buffed: !game.upgrades.isEmpty,
             canAfford: game.economy.canAfford(tower.cost),
             onBuild: () => game.buildTower(spot, tower),
           ),
@@ -71,11 +74,19 @@ class _BuildView extends StatelessWidget {
 class _TowerOption extends StatelessWidget {
   const _TowerOption({
     required this.tower,
+    required this.effective,
+    required this.buffed,
     required this.canAfford,
     required this.onBuild,
   });
 
   final TowerStats tower;
+
+  /// [tower] with the player's global upgrades applied.
+  final TowerStats effective;
+
+  /// Whether any upgrade is active (so the effective numbers differ).
+  final bool buffed;
   final bool canAfford;
   final VoidCallback onBuild;
 
@@ -107,6 +118,8 @@ class _TowerOption extends StatelessWidget {
                       tower.description,
                       style: const TextStyle(fontSize: 12, color: Colors.black54),
                     ),
+                    const SizedBox(height: 3),
+                    _StatsLine(base: tower, effective: effective, buffed: buffed),
                   ],
                 ),
               ),
@@ -136,6 +149,67 @@ class _TowerOption extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+/// One-line range / fire-rate / damage readout. When a global upgrade is
+/// active the buffed figure is tinted green with the authored value in
+/// parentheses.
+class _StatsLine extends StatelessWidget {
+  const _StatsLine({
+    required this.base,
+    required this.effective,
+    required this.buffed,
+  });
+
+  final TowerStats base;
+  final TowerStats effective;
+  final bool buffed;
+
+  @override
+  Widget build(BuildContext context) {
+    final spans = <InlineSpan>[
+      _metric('Tầm', base.rangeCells, effective.rangeCells, 1),
+      const TextSpan(text: '   '),
+      _metric('Nhịp', base.fireRate, effective.fireRate, 1, suffix: '/s'),
+      const TextSpan(text: '   '),
+      _metric('ST', base.damage, effective.damage, 0),
+    ];
+    return Text.rich(
+      TextSpan(children: spans),
+      style: const TextStyle(fontSize: 11, color: Colors.black54),
+    );
+  }
+
+  InlineSpan _metric(
+    String label,
+    double baseValue,
+    double effectiveValue,
+    int digits, {
+    String suffix = '',
+  }) {
+    final changed = buffed && (effectiveValue - baseValue).abs() > 0.05;
+    if (!changed) {
+      return TextSpan(
+        text: '$label ${baseValue.toStringAsFixed(digits)}$suffix',
+      );
+    }
+    return TextSpan(
+      children: [
+        TextSpan(text: '$label '),
+        TextSpan(
+          text: '${effectiveValue.toStringAsFixed(digits)}$suffix',
+          style: const TextStyle(
+            color: Color(0xFF1B7A3D),
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        TextSpan(
+          text: ' (${baseValue.toStringAsFixed(digits)})',
+          style: const TextStyle(color: Colors.black38),
+        ),
+      ],
     );
   }
 }

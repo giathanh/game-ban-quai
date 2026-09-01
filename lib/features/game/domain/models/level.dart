@@ -103,6 +103,39 @@ class TowerStats {
 
   bool get hasSplash => splashRadiusCells > 0;
   bool get hasBurn => burnDps > 0 && burnDuration > 0;
+
+  /// Returns a copy with the given fields overridden. Used by the upgrade
+  /// resolver to build a buffed [TowerStats] without mutating the `const`
+  /// catalog entry.
+  TowerStats copyWith({
+    TowerKind? kind,
+    String? name,
+    String? description,
+    int? cost,
+    double? rangeCells,
+    double? fireRate,
+    double? damage,
+    double? projectileSpeed,
+    double? splashRadiusCells,
+    double? splashDamageFactor,
+    double? burnDps,
+    double? burnDuration,
+  }) {
+    return TowerStats(
+      kind: kind ?? this.kind,
+      name: name ?? this.name,
+      description: description ?? this.description,
+      cost: cost ?? this.cost,
+      rangeCells: rangeCells ?? this.rangeCells,
+      fireRate: fireRate ?? this.fireRate,
+      damage: damage ?? this.damage,
+      projectileSpeed: projectileSpeed ?? this.projectileSpeed,
+      splashRadiusCells: splashRadiusCells ?? this.splashRadiusCells,
+      splashDamageFactor: splashDamageFactor ?? this.splashDamageFactor,
+      burnDps: burnDps ?? this.burnDps,
+      burnDuration: burnDuration ?? this.burnDuration,
+    );
+  }
 }
 
 /// Declarative definition of a level.
@@ -120,9 +153,14 @@ class LevelData {
     required this.waves,
     required this.enemy,
     required this.towers,
+    this.backgroundAsset = 'game/level_01_background.png',
   });
 
   final String name;
+
+  /// Path (relative to `assets/images/`) of the diorama drawn under the field.
+  /// Falls back to a gradient when the asset is missing or in logic-only tests.
+  final String backgroundAsset;
 
   /// Side length of a single grid cell, in pixels.
   final double cellSize;
