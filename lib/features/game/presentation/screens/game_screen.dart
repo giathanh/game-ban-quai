@@ -1,24 +1,34 @@
 import 'package:flame/game.dart';
 import 'package:flutter/material.dart';
 
-import '../../data/levels/level_catalog.dart';
 import '../../data/progress_store.dart';
 import '../../domain/models/level.dart';
 import '../../engine/ban_heo_game.dart';
 import '../widgets/build_menu.dart';
 import '../widgets/game_hud.dart';
 import '../widgets/pause_overlay.dart';
-import 'level_loader_screen.dart';
 
 class GameScreen extends StatefulWidget {
-  const GameScreen({required this.level, this.levelIndex, super.key});
+  const GameScreen({
+    required this.level,
+    this.levelIndex,
+    this.onReplay,
+    this.onNext,
+    super.key,
+  });
 
   final LevelData level;
 
-  /// Position of this level in [kLevelCatalog], or null when the level was
-  /// launched outside the campaign (e.g. a test). Drives progress saving and
-  /// the "next level" button.
+  /// Position of this level in the campaign catalog, or null when launched
+  /// outside it (e.g. a test). Drives progress saving.
   final int? levelIndex;
+
+  /// Restart the current level. Null hides the retry action.
+  final VoidCallback? onReplay;
+
+  /// Advance to the next level. Null when there is none (last level / no
+  /// campaign context) — the win dialog then offers "back to menu" instead.
+  final VoidCallback? onNext;
 
   @override
   State<GameScreen> createState() => _GameScreenState();
@@ -32,9 +42,6 @@ class _GameScreenState extends State<GameScreen> {
 
   bool _paused = false;
   bool _resultShown = false;
-
-  bool get _hasNextLevel =>
-      widget.levelIndex != null && hasLevelAt(widget.levelIndex! + 1);
 
   @override
   void dispose() {
@@ -53,14 +60,6 @@ class _GameScreenState extends State<GameScreen> {
     });
   }
 
-  void _replaceWithLevel(int index) {
-    Navigator.of(context).pushReplacement(
-      MaterialPageRoute<void>(
-        builder: (_) => LevelLoaderScreen(levelIndex: index),
-      ),
-    );
-  }
-
   void _onGameOver(GameResult result) {
     if (_resultShown) {
       return;
@@ -77,6 +76,7 @@ class _GameScreenState extends State<GameScreen> {
         return;
       }
       final won = result == GameResult.won;
+      final showNext = won && widget.onNext != null;
       showDialog<void>(
         context: context,
         barrierDismissible: false,
@@ -88,29 +88,19 @@ class _GameScreenState extends State<GameScreen> {
                 : 'Đàn heo đã tràn qua. Thử lại nhé!',
           ),
           actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(dialogContext).pop();
-                if (widget.levelIndex != null) {
-                  _replaceWithLevel(widget.levelIndex!);
-                } else {
-                  Navigator.of(context).pushReplacement(
-                    MaterialPageRoute<void>(
-                      builder: (_) => GameScreen(
-                        level: widget.level,
-                        levelIndex: widget.levelIndex,
-                      ),
-                    ),
-                  );
-                }
-              },
-              child: const Text('Chơi lại'),
-            ),
-            if (won && _hasNextLevel)
+            if (widget.onReplay != null)
+              TextButton(
+                onPressed: () {
+                  Navigator.of(dialogContext).pop();
+                  widget.onReplay!();
+                },
+                child: const Text('Chơi lại'),
+              ),
+            if (showNext)
               FilledButton(
                 onPressed: () {
                   Navigator.of(dialogContext).pop();
-                  _replaceWithLevel(widget.levelIndex! + 1);
+                  widget.onNext!();
                 },
                 child: const Text('Màn tiếp theo'),
               )
