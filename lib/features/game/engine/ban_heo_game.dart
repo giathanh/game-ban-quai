@@ -69,7 +69,7 @@ class BanHeoGame extends FlameGame {
   Future<void> onLoad() async {
     camera.viewfinder.anchor = Anchor.topLeft;
 
-    world.add(TerrainBackground(level: level, pathPixels: _pathPixels));
+    world.add(TerrainBackground(level: level));
     world.add(
       PathComponent(waypoints: _pathPixels, laneWidth: level.cellSize * 0.82),
     );
