@@ -1,7 +1,9 @@
 import 'package:ban_heo/features/game/domain/models/level.dart';
 import 'package:ban_heo/features/game/engine/ban_heo_game.dart';
+import 'package:ban_heo/features/game/engine/components/build_spot.dart';
 import 'package:ban_heo/features/game/engine/components/enemy.dart';
 import 'package:ban_heo/features/game/engine/components/projectile.dart';
+import 'package:ban_heo/features/upgrades/domain/upgrade_levels.dart';
 import 'package:flame/components.dart';
 import 'package:flame_test/flame_test.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -144,5 +146,103 @@ void main() {
     expect(bystander.hpFraction, lessThan(1), reason: 'caught in the splash');
     // Bystander took the reduced splash hit, not the full one.
     expect(bystander.hpFraction, greaterThan(target.hpFraction));
+  });
+
+  // --- SPEC-002: global upgrades reach a built Tower --------------------------
+
+  const maxedUpgrades = UpgradeLevels(range: 5, damage: 5, reload: 5);
+
+  LevelData soloLevel() => LevelData(
+    name: 'Solo',
+    cellSize: 32,
+    gridCols: 60,
+    gridRows: 10,
+    startingLives: 100,
+    startingGold: 500,
+    timeBetweenWaves: 0.01,
+    pathCells: <Vector2>[Vector2(-1, 5), Vector2(60, 5)],
+    buildSpotCells: <Vector2>[Vector2(4, 5)],
+    waves: const <WaveData>[
+      WaveData([SpawnGroup(count: 1, interval: 0.0)]),
+    ],
+    enemy: const EnemyStats(
+      maxHp: 240,
+      speed: 12,
+      goldOnKill: 5,
+      livesOnLeak: 1,
+    ),
+    towers: const <TowerStats>[
+      TowerStats(
+        kind: TowerKind.arrow,
+        name: 'A',
+        description: 't',
+        cost: 10,
+        rangeCells: 6,
+        fireRate: 2,
+        damage: 12,
+        projectileSpeed: 3000,
+      ),
+    ],
+  );
+
+  test('buildTower applies global upgrades but charges the base cost', () async {
+    final game = await initializeGame<BanHeoGame>(
+      () => BanHeoGame(
+        level: soloLevel(),
+        onGameOver: (_) {},
+        upgrades: maxedUpgrades,
+      ),
+    );
+    await _tickUntil(
+      game,
+      () => game.world.children.query<BuildSpot>().isNotEmpty,
+    );
+    final spot = game.world.children.query<BuildSpot>().first;
+    final base = game.level.towers.first;
+    final goldBefore = game.economy.gold;
+
+    expect(game.buildTower(spot, base), isTrue);
+
+    expect(game.economy.gold, goldBefore - base.cost);
+    final tower = spot.tower!;
+    expect(tower.stats.cost, base.cost);
+    expect(tower.stats.damage, closeTo(12 * 1.6, 1e-6));
+    expect(tower.stats.fireRate, closeTo(2 / 0.7, 1e-3));
+    expect(
+      tower.rangePixels,
+      closeTo(6 * 1.4 * game.level.cellSize, 1e-6),
+    );
+    game.onRemove();
+  });
+
+  Future<int> framesToKill(UpgradeLevels upgrades) async {
+    final game = await initializeGame<BanHeoGame>(
+      () => BanHeoGame(
+        level: soloLevel(),
+        onGameOver: (_) {},
+        upgrades: upgrades,
+      ),
+    );
+    await _tickUntil(
+      game,
+      () => game.world.children.query<Enemy>().isNotEmpty,
+    );
+    final spot = game.world.children.query<BuildSpot>().first;
+    game.buildTower(spot, game.level.towers.first);
+
+    var frames = 0;
+    while (game.world.children.query<Enemy>().isNotEmpty && frames < 1200) {
+      await _tick(game);
+      frames++;
+    }
+    expect(frames, lessThan(1200), reason: 'pig was never killed');
+    game.onRemove();
+    return frames;
+  }
+
+  test('maxed upgrades kill a pig in strictly fewer frames', () async {
+    final maxed = await framesToKill(maxedUpgrades);
+    final none = await framesToKill(UpgradeLevels.none);
+    expect(maxed, lessThan(none));
   });
 }
