@@ -4,7 +4,6 @@ import 'package:flutter/services.dart';
 
 import '../../../game/data/levels/level_01.dart';
 import '../../../game/presentation/screens/game_screen.dart';
-import '../widgets/menu_background.dart';
 import '../widgets/menu_button.dart';
 
 class MainMenuScreen extends StatefulWidget {
@@ -19,7 +18,7 @@ class _MainMenuScreenState extends State<MainMenuScreen>
   late final AnimationController _bg = AnimationController(
     vsync: this,
     duration: const Duration(seconds: 20),
-  )..repeat();
+  )..repeat(reverse: true);
 
   @override
   void dispose() {
@@ -62,68 +61,143 @@ class _MainMenuScreenState extends State<MainMenuScreen>
     );
   }
 
-  void _quit() {
-    SystemNavigator.pop();
-  }
+  void _quit() => SystemNavigator.pop();
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
     return Scaffold(
       body: Stack(
+        fit: StackFit.expand,
         children: [
-          Positioned.fill(
-            child: AnimatedBuilder(
-              animation: _bg,
-              builder: (context, _) => CustomPaint(
-                painter: MenuBackgroundPainter(_bg.value, scheme.primary),
+          AnimatedBuilder(
+            animation: _bg,
+            builder: (context, child) =>
+                Transform.scale(scale: 1.04 + _bg.value * 0.015, child: child),
+            child: Image.asset(
+              'assets/images/menu/menu_background.png',
+              fit: BoxFit.cover,
+              alignment: const Alignment(0, -0.08),
+            ),
+          ),
+          const DecoratedBox(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [Color(0x120B6A70), Color(0x361A4D32)],
+                stops: [0.42, 1],
               ),
             ),
           ),
-          Center(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(24),
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 28),
-                decoration: BoxDecoration(
-                  color: const Color(0xFF1B3A1F).withValues(alpha: 0.55),
-                  borderRadius: BorderRadius.circular(28),
-                  border: Border.all(
-                    color: Colors.white.withValues(alpha: 0.15),
-                  ),
+          SafeArea(
+            child: Center(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 16,
                 ),
-                child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    'BẮN HEO',
-                    style: Theme.of(context).textTheme.displayMedium?.copyWith(
-                      fontWeight: FontWeight.w900,
-                      letterSpacing: 6,
-                      color: Colors.white,
-                      shadows: const [
-                        Shadow(
-                          color: Color(0xFF0C2410),
-                          blurRadius: 8,
-                          offset: Offset(0, 3),
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 390),
+                  child: Container(
+                    padding: const EdgeInsets.fromLTRB(28, 22, 28, 28),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF8F1D8).withValues(alpha: 0.94),
+                      borderRadius: BorderRadius.circular(34),
+                      border: Border.all(
+                        color: const Color(0xFFFFF8DD),
+                        width: 3,
+                      ),
+                      boxShadow: const [
+                        BoxShadow(
+                          color: Color(0x55143F2A),
+                          blurRadius: 28,
+                          offset: Offset(0, 14),
+                        ),
+                        BoxShadow(
+                          color: Color(0x667A5B2E),
+                          offset: Offset(0, 7),
                         ),
                       ],
                     ),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 13,
+                            vertical: 6,
+                          ),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF2B9B78),
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: const Text(
+                            'THỦ THÁP • CHẶN HEO',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w800,
+                              letterSpacing: 1.1,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        Text(
+                          'BẮN HEO',
+                          textAlign: TextAlign.center,
+                          style: Theme.of(context).textTheme.displayMedium
+                              ?.copyWith(
+                                fontWeight: FontWeight.w900,
+                                letterSpacing: 3,
+                                color: const Color(0xFF164F3B),
+                                height: 0.95,
+                                shadows: const [
+                                  Shadow(
+                                    color: Colors.white,
+                                    offset: Offset(0, 3),
+                                  ),
+                                  Shadow(
+                                    color: Color(0x40523420),
+                                    blurRadius: 4,
+                                    offset: Offset(0, 6),
+                                  ),
+                                ],
+                              ),
+                        ),
+                        const SizedBox(height: 8),
+                        const Text(
+                          'Dựng tháp xịn, bảo vệ dòng sông!',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            color: Color(0xFF5B6F57),
+                            fontSize: 15,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        const SizedBox(height: 28),
+                        MenuButton(
+                          label: 'BẮT ĐẦU',
+                          icon: Icons.play_arrow_rounded,
+                          onPressed: _play,
+                          primary: true,
+                        ),
+                        const SizedBox(height: 13),
+                        MenuButton(
+                          label: 'HƯỚNG DẪN',
+                          icon: Icons.menu_book_rounded,
+                          onPressed: _showHelp,
+                        ),
+                        if (!kIsWeb) ...[
+                          const SizedBox(height: 13),
+                          MenuButton(
+                            label: 'THOÁT',
+                            icon: Icons.logout_rounded,
+                            onPressed: _quit,
+                          ),
+                        ],
+                      ],
+                    ),
                   ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Thủ tháp - bắn quái',
-                    style: Theme.of(context).textTheme.titleMedium,
-                  ),
-                  const SizedBox(height: 40),
-                  MenuButton(label: 'Chơi', onPressed: _play, primary: true),
-                  const SizedBox(height: 14),
-                  MenuButton(label: 'Hướng dẫn', onPressed: _showHelp),
-                  if (!kIsWeb) ...[
-                    const SizedBox(height: 14),
-                    MenuButton(label: 'Thoát', onPressed: _quit),
-                  ],
-                ],
                 ),
               ),
             ),
