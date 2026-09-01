@@ -1,16 +1,24 @@
 import 'package:flame/game.dart';
 import 'package:flutter/material.dart';
 
+import '../../data/levels/level_catalog.dart';
+import '../../data/progress_store.dart';
 import '../../domain/models/level.dart';
 import '../../engine/ban_heo_game.dart';
 import '../widgets/build_menu.dart';
 import '../widgets/game_hud.dart';
 import '../widgets/pause_overlay.dart';
+import 'level_loader_screen.dart';
 
 class GameScreen extends StatefulWidget {
-  const GameScreen({required this.level, super.key});
+  const GameScreen({required this.level, this.levelIndex, super.key});
 
   final LevelData level;
+
+  /// Position of this level in [kLevelCatalog], or null when the level was
+  /// launched outside the campaign (e.g. a test). Drives progress saving and
+  /// the "next level" button.
+  final int? levelIndex;
 
   @override
   State<GameScreen> createState() => _GameScreenState();
@@ -24,6 +32,9 @@ class _GameScreenState extends State<GameScreen> {
 
   bool _paused = false;
   bool _resultShown = false;
+
+  bool get _hasNextLevel =>
+      widget.levelIndex != null && hasLevelAt(widget.levelIndex! + 1);
 
   @override
   void dispose() {
@@ -42,44 +53,75 @@ class _GameScreenState extends State<GameScreen> {
     });
   }
 
+  void _replaceWithLevel(int index) {
+    Navigator.of(context).pushReplacement(
+      MaterialPageRoute<void>(
+        builder: (_) => LevelLoaderScreen(levelIndex: index),
+      ),
+    );
+  }
+
   void _onGameOver(GameResult result) {
     if (_resultShown) {
       return;
     }
     _resultShown = true;
+
+    if (result == GameResult.won && widget.levelIndex != null) {
+      // Fire-and-forget: the picker re-reads progress when we pop back to it.
+      ProgressStore.markCompleted(widget.levelIndex!);
+    }
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) {
         return;
       }
+      final won = result == GameResult.won;
       showDialog<void>(
         context: context,
         barrierDismissible: false,
         builder: (dialogContext) => AlertDialog(
-          title: Text(result == GameResult.won ? 'Thắng!' : 'Thua'),
+          title: Text(won ? 'Thắng!' : 'Thua'),
           content: Text(
-            result == GameResult.won
-                ? 'Bạn đã chặn hết 5 wave heo. Giỏi lắm!'
+            won
+                ? 'Bạn đã chặn hết ${widget.level.waves.length} đợt heo. Giỏi lắm!'
                 : 'Đàn heo đã tràn qua. Thử lại nhé!',
           ),
           actions: [
             TextButton(
               onPressed: () {
                 Navigator.of(dialogContext).pop();
-                Navigator.of(context).pushReplacement(
-                  MaterialPageRoute<void>(
-                    builder: (_) => GameScreen(level: widget.level),
-                  ),
-                );
+                if (widget.levelIndex != null) {
+                  _replaceWithLevel(widget.levelIndex!);
+                } else {
+                  Navigator.of(context).pushReplacement(
+                    MaterialPageRoute<void>(
+                      builder: (_) => GameScreen(
+                        level: widget.level,
+                        levelIndex: widget.levelIndex,
+                      ),
+                    ),
+                  );
+                }
               },
               child: const Text('Chơi lại'),
             ),
-            FilledButton(
-              onPressed: () {
-                Navigator.of(dialogContext).pop();
-                Navigator.of(context).popUntil((route) => route.isFirst);
-              },
-              child: const Text('Về menu'),
-            ),
+            if (won && _hasNextLevel)
+              FilledButton(
+                onPressed: () {
+                  Navigator.of(dialogContext).pop();
+                  _replaceWithLevel(widget.levelIndex! + 1);
+                },
+                child: const Text('Màn tiếp theo'),
+              )
+            else
+              FilledButton(
+                onPressed: () {
+                  Navigator.of(dialogContext).pop();
+                  Navigator.of(context).popUntil((route) => route.isFirst);
+                },
+                child: const Text('Về menu'),
+              ),
           ],
         ),
       );

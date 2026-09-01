@@ -36,7 +36,7 @@ class TerrainBackground extends PositionComponent
       return;
     }
     try {
-      _sprite = Sprite(await game.images.load('game/level_01_background.png'));
+      _sprite = Sprite(await game.images.load(level.backgroundAsset));
     } catch (_) {
       // Keep the fallback visible if an asset cannot be decoded.
     }

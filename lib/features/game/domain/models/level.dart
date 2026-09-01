@@ -120,9 +120,14 @@ class LevelData {
     required this.waves,
     required this.enemy,
     required this.towers,
+    this.backgroundAsset = 'game/level_01_background.png',
   });
 
   final String name;
+
+  /// Path (relative to `assets/images/`) of the diorama drawn under the field.
+  /// Falls back to a gradient when the asset is missing or in logic-only tests.
+  final String backgroundAsset;
 
   /// Side length of a single grid cell, in pixels.
   final double cellSize;

@@ -2,8 +2,7 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-import '../../../game/data/levels/level_01.dart';
-import '../../../game/presentation/screens/game_screen.dart';
+import '../../../level_select/presentation/screens/level_select_screen.dart';
 import '../widgets/menu_button.dart';
 
 class MainMenuScreen extends StatefulWidget {
@@ -27,9 +26,9 @@ class _MainMenuScreenState extends State<MainMenuScreen>
   }
 
   void _play() {
-    Navigator.of(
-      context,
-    ).push(MaterialPageRoute<void>(builder: (_) => GameScreen(level: level01)));
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(builder: (_) => const LevelSelectScreen()),
+    );
   }
 
   void _showHelp() {

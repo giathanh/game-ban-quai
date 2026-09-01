@@ -1,7 +1,8 @@
-import 'package:ban_heo/features/game/data/levels/level_01.dart';
 import 'package:ban_heo/features/game/domain/models/level.dart';
 import 'package:ban_heo/features/game/engine/systems/wave_spawner.dart';
 import 'package:flutter_test/flutter_test.dart';
+
+import 'support/load_level.dart';
 
 void _pump(WaveSpawner spawner, double seconds, {double dt = 1 / 60}) {
   var elapsed = 0.0;
@@ -110,6 +111,7 @@ void main() {
   });
 
   test('drives the real Level 1 table to completion (50 pigs)', () {
+    final level01 = loadLevelFromFile('assets/levels/level_01.tmx');
     var spawned = 0;
     final expected = level01.waves.fold<int>(
       0,
