@@ -83,7 +83,16 @@ class _MainMenuScreenState extends State<MainMenuScreen>
           Center(
             child: SingleChildScrollView(
               padding: const EdgeInsets.all(24),
-              child: Column(
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 28),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF1B3A1F).withValues(alpha: 0.55),
+                  borderRadius: BorderRadius.circular(28),
+                  border: Border.all(
+                    color: Colors.white.withValues(alpha: 0.15),
+                  ),
+                ),
+                child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
@@ -91,6 +100,14 @@ class _MainMenuScreenState extends State<MainMenuScreen>
                     style: Theme.of(context).textTheme.displayMedium?.copyWith(
                       fontWeight: FontWeight.w900,
                       letterSpacing: 6,
+                      color: Colors.white,
+                      shadows: const [
+                        Shadow(
+                          color: Color(0xFF0C2410),
+                          blurRadius: 8,
+                          offset: Offset(0, 3),
+                        ),
+                      ],
                     ),
                   ),
                   const SizedBox(height: 8),
@@ -107,6 +124,7 @@ class _MainMenuScreenState extends State<MainMenuScreen>
                     MenuButton(label: 'Thoát', onPressed: _quit),
                   ],
                 ],
+                ),
               ),
             ),
           ),
