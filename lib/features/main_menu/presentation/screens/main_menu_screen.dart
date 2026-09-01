@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../../../level_select/presentation/screens/level_select_screen.dart';
+import '../../../upgrades/data/upgrade_store.dart';
+import '../../../upgrades/presentation/screens/upgrade_screen.dart';
 import '../widgets/menu_button.dart';
 
 class MainMenuScreen extends StatefulWidget {
@@ -19,16 +21,38 @@ class _MainMenuScreenState extends State<MainMenuScreen>
     duration: const Duration(seconds: 20),
   )..repeat(reverse: true);
 
+  int _upgradePoints = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _refreshPoints();
+  }
+
   @override
   void dispose() {
     _bg.dispose();
     super.dispose();
   }
 
-  void _play() {
-    Navigator.of(context).push(
+  Future<void> _refreshPoints() async {
+    final points = await UpgradeStore.points();
+    if (!mounted) return;
+    setState(() => _upgradePoints = points);
+  }
+
+  Future<void> _play() async {
+    await Navigator.of(context).push(
       MaterialPageRoute<void>(builder: (_) => const LevelSelectScreen()),
     );
+    await _refreshPoints();
+  }
+
+  Future<void> _openUpgrades() async {
+    await Navigator.of(context).push(
+      MaterialPageRoute<void>(builder: (_) => const UpgradeScreen()),
+    );
+    await _refreshPoints();
   }
 
   void _showHelp() {
@@ -179,6 +203,13 @@ class _MainMenuScreenState extends State<MainMenuScreen>
                           icon: Icons.play_arrow_rounded,
                           onPressed: _play,
                           primary: true,
+                        ),
+                        const SizedBox(height: 13),
+                        MenuButton(
+                          label: 'NÂNG CẤP',
+                          icon: Icons.upgrade_rounded,
+                          onPressed: _openUpgrades,
+                          badge: _upgradePoints > 0 ? '$_upgradePoints' : null,
                         ),
                         const SizedBox(height: 13),
                         MenuButton(

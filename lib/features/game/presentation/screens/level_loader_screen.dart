@@ -1,9 +1,15 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/platform/orientation_lock.dart';
+import '../../../upgrades/data/upgrade_store.dart';
+import '../../../upgrades/domain/upgrade_levels.dart';
 import '../../data/levels/level_catalog.dart';
 import '../../domain/models/level.dart';
 import 'game_screen.dart';
+
+/// A loaded level plus the player's global upgrades, read together so a round
+/// always sees a consistent pair.
+typedef _Loaded = ({LevelData level, UpgradeLevels upgrades});
 
 /// Owns a whole play session: it loads the `.tmx` for the current level, hands
 /// off to [GameScreen], and handles "retry" / "next level" by swapping the
@@ -24,7 +30,20 @@ class _LevelLoaderScreenState extends State<LevelLoaderScreen> {
 
   /// Bumped on every (re)load so [GameScreen]'s state is rebuilt from scratch.
   int _attempt = 0;
-  late Future<LevelData> _future = loadCatalogLevel(_index);
+  late Future<_Loaded> _future = _load(_index);
+
+  static Future<_Loaded> _load(int index) async {
+    final level = await loadCatalogLevel(index);
+    var upgrades = UpgradeLevels.none;
+    try {
+      upgrades = (await UpgradeStore.load()).levels;
+    } catch (_) {
+      // A prefs failure must not turn into a "cannot load level" screen — the
+      // round just runs without global buffs.
+      upgrades = UpgradeLevels.none;
+    }
+    return (level: level, upgrades: upgrades);
+  }
 
   @override
   void initState() {
@@ -41,7 +60,7 @@ class _LevelLoaderScreenState extends State<LevelLoaderScreen> {
   void _reload() {
     setState(() {
       _attempt++;
-      _future = loadCatalogLevel(_index);
+      _future = _load(_index);
     });
   }
 
@@ -52,13 +71,13 @@ class _LevelLoaderScreenState extends State<LevelLoaderScreen> {
     setState(() {
       _index++;
       _attempt++;
-      _future = loadCatalogLevel(_index);
+      _future = _load(_index);
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder<LevelData>(
+    return FutureBuilder<_Loaded>(
       future: _future,
       builder: (context, snapshot) {
         if (snapshot.connectionState != ConnectionState.done) {
@@ -70,10 +89,13 @@ class _LevelLoaderScreenState extends State<LevelLoaderScreen> {
         if (snapshot.hasError) {
           return _LoadError(error: snapshot.error, onRetry: _reload);
         }
+        final loaded = snapshot.data!;
         return GameScreen(
           key: ValueKey<String>('${_index}_$_attempt'),
-          level: snapshot.data!,
+          level: loaded.level,
           levelIndex: _index,
+          levelId: kLevelCatalog[_index].id,
+          upgrades: loaded.upgrades,
           onReplay: _reload,
           onNext: hasLevelAt(_index + 1) ? _goToNextLevel : null,
         );

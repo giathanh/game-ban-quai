@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import '../../../game/data/levels/level_catalog.dart';
 import '../../../game/data/progress_store.dart';
 import '../../../game/presentation/screens/level_loader_screen.dart';
+import '../../../upgrades/data/upgrade_store.dart';
+import '../../../upgrades/presentation/screens/upgrade_screen.dart';
 import '../widgets/level_card.dart';
 
 /// Scrollable list of every level in [kLevelCatalog]. Locked levels are shown
@@ -17,6 +19,7 @@ class LevelSelectScreen extends StatefulWidget {
 
 class _LevelSelectScreenState extends State<LevelSelectScreen> {
   int _highestUnlocked = 0;
+  int _upgradePoints = 0;
   bool _loading = true;
 
   @override
@@ -27,11 +30,13 @@ class _LevelSelectScreenState extends State<LevelSelectScreen> {
 
   Future<void> _refresh() async {
     final unlocked = await ProgressStore.highestUnlockedIndex();
+    final points = await UpgradeStore.points();
     if (!mounted) {
       return;
     }
     setState(() {
       _highestUnlocked = unlocked;
+      _upgradePoints = points;
       _loading = false;
     });
   }
@@ -43,6 +48,13 @@ class _LevelSelectScreenState extends State<LevelSelectScreen> {
       ),
     );
     // The player may have cleared a level while away — re-read progress.
+    await _refresh();
+  }
+
+  Future<void> _openUpgrades() async {
+    await Navigator.of(context).push(
+      MaterialPageRoute<void>(builder: (_) => const UpgradeScreen()),
+    );
     await _refresh();
   }
 
@@ -60,6 +72,24 @@ class _LevelSelectScreenState extends State<LevelSelectScreen> {
           fontWeight: FontWeight.w900,
           letterSpacing: 1.5,
         ),
+        actions: [
+          Padding(
+            padding: const EdgeInsets.only(right: 8),
+            child: TextButton.icon(
+              onPressed: _openUpgrades,
+              icon: const Icon(Icons.upgrade_rounded, color: Colors.white),
+              label: Text(
+                '$_upgradePoints',
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w900,
+                  fontSize: 16,
+                ),
+              ),
+              style: TextButton.styleFrom(foregroundColor: Colors.white),
+            ),
+          ),
+        ],
       ),
       body: _loading
           ? const Center(child: CircularProgressIndicator(color: Colors.white))

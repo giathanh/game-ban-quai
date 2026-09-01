@@ -2,6 +2,8 @@ import 'package:flame/components.dart';
 import 'package:flame/game.dart';
 import 'package:flutter/material.dart';
 
+import '../../upgrades/domain/upgrade_levels.dart';
+import '../../upgrades/domain/upgrade_math.dart';
 import '../domain/models/level.dart';
 import 'components/build_spot.dart';
 import 'components/enemy.dart';
@@ -17,8 +19,11 @@ enum GameResult { won, lost }
 /// Owns the Level 1 lifecycle: builds the field, runs the wave spawner, tracks
 /// lives, and decides win/lose.
 class BanHeoGame extends FlameGame {
-  BanHeoGame({required this.level, required this.onGameOver})
-    : economy = Economy(startingGold: level.startingGold),
+  BanHeoGame({
+    required this.level,
+    required this.onGameOver,
+    this.upgrades = UpgradeLevels.none,
+  }) : economy = Economy(startingGold: level.startingGold),
       lives = ValueNotifier<int>(level.startingLives),
       _pathPixels = level.pathPixels(),
       super(
@@ -32,6 +37,10 @@ class BanHeoGame extends FlameGame {
 
   /// Invoked exactly once when the round ends.
   final void Function(GameResult result) onGameOver;
+
+  /// Global tower buffs bought on the upgrade screen. Read once at build time
+  /// (see [buildTower]); upgrades can only change from the menu, never mid-round.
+  final UpgradeLevels upgrades;
 
   /// Construction-time state must not be `late`: Flutter overlays can read it
   /// during their first build pass, before Flame's asynchronous [onLoad].
@@ -174,7 +183,7 @@ class BanHeoGame extends FlameGame {
     }
     final tower = Tower(
       position: spot.position.clone(),
-      stats: stats,
+      stats: applyUpgrades(stats, upgrades),
       cellSize: level.cellSize,
     );
     spot.tower = tower;
