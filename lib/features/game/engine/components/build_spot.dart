@@ -9,19 +9,20 @@ import 'tower.dart';
 class BuildSpot extends PositionComponent
     with TapCallbacks, HasGameReference<BanHeoGame> {
   BuildSpot({required super.position, required double cellSize})
-      : super(
-          size: Vector2.all(cellSize * 0.82),
-          anchor: Anchor.center,
-          priority: -5,
-        );
+    : super(
+        size: Vector2.all(cellSize * 0.82),
+        anchor: Anchor.center,
+        priority: -5,
+      );
 
   Tower? tower;
 
   bool get isOccupied => tower != null;
 
-  final Paint _fillPaint = Paint()..color = const Color(0x33FFFFFF);
+  final Paint _padPaint = Paint()..color = const Color(0xFFB79B6E);
+  final Paint _padTopPaint = Paint()..color = const Color(0xFFCDB587);
   final Paint _borderPaint = Paint()
-    ..color = const Color(0x99FFFFFF)
+    ..color = const Color(0xFF7C6540)
     ..style = PaintingStyle.stroke
     ..strokeWidth = 2;
 
@@ -40,9 +41,14 @@ class BuildSpot extends PositionComponent
     }
     final rect = RRect.fromRectAndRadius(
       Rect.fromLTWH(0, 0, size.x, size.y),
+      const Radius.circular(5),
+    );
+    final top = RRect.fromRectAndRadius(
+      Rect.fromLTWH(2, 1, size.x - 4, size.y - 5),
       const Radius.circular(4),
     );
-    canvas.drawRRect(rect, _fillPaint);
+    canvas.drawRRect(rect, _padPaint);
+    canvas.drawRRect(top, _padTopPaint);
     canvas.drawRRect(rect, _borderPaint);
   }
 }

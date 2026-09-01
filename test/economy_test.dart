@@ -1,4 +1,4 @@
-import 'package:ban_heo/game/systems/economy.dart';
+import 'package:ban_heo/features/game/engine/systems/economy.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {

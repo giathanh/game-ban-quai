@@ -1,12 +1,14 @@
-import 'package:ban_heo/data/level.dart';
-import 'package:ban_heo/game/ban_heo_game.dart';
-import 'package:ban_heo/game/components/enemy.dart';
+import 'package:ban_heo/features/game/domain/models/level.dart';
+import 'package:ban_heo/features/game/engine/ban_heo_game.dart';
+import 'package:ban_heo/features/game/engine/components/enemy.dart';
 import 'package:flame/components.dart';
 import 'package:flame_test/flame_test.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-const _pigshooter = TowerStats(
-  name: 'Pigshooter',
+const _arrowTower = TowerStats(
+  kind: TowerKind.arrow,
+  name: 'Tháp Bắn Tên',
+  description: 'test',
   cost: 50,
   rangeCells: 2.5,
   fireRate: 1,
@@ -40,7 +42,7 @@ LevelData _level({
       goldOnKill: 7,
       livesOnLeak: 1,
     ),
-    pigshooter: _pigshooter,
+    towers: const [_arrowTower],
   );
 }
 

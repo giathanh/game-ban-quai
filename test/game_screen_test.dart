@@ -1,6 +1,6 @@
-import 'package:ban_heo/data/levels/level_01.dart';
-import 'package:ban_heo/game/ban_heo_game.dart';
-import 'package:ban_heo/screens/game_screen.dart';
+import 'package:ban_heo/features/game/data/levels/level_01.dart';
+import 'package:ban_heo/features/game/engine/ban_heo_game.dart';
+import 'package:ban_heo/features/game/presentation/screens/game_screen.dart';
 import 'package:flame/game.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';

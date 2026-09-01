@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
-import 'screens/main_menu_screen.dart';
+import 'core/theme/app_theme.dart';
+import 'features/main_menu/presentation/screens/main_menu_screen.dart';
 
 class BanHeoApp extends StatelessWidget {
   const BanHeoApp({super.key});
@@ -10,16 +11,7 @@ class BanHeoApp extends StatelessWidget {
     return MaterialApp(
       title: 'Bắn Heo',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        useMaterial3: true,
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFF43A047),
-          brightness: Brightness.dark,
-        ),
-        textTheme: const TextTheme(
-          displayLarge: TextStyle(fontWeight: FontWeight.w900, letterSpacing: 4),
-        ),
-      ),
+      theme: AppTheme.dark,
       home: const MainMenuScreen(),
     );
   }

@@ -1,6 +1,6 @@
 import 'package:flame/components.dart';
 
-import '../../data/level.dart';
+import '../../domain/models/level.dart';
 
 enum _Phase { countdown, spawning, done }
 

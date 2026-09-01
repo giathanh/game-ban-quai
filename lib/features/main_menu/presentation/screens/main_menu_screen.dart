@@ -1,11 +1,11 @@
-import 'dart:math' as math;
-
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-import '../data/levels/level_01.dart';
-import 'game_screen.dart';
+import '../../../game/data/levels/level_01.dart';
+import '../../../game/presentation/screens/game_screen.dart';
+import '../widgets/menu_background.dart';
+import '../widgets/menu_button.dart';
 
 class MainMenuScreen extends StatefulWidget {
   const MainMenuScreen({super.key});
@@ -28,11 +28,9 @@ class _MainMenuScreenState extends State<MainMenuScreen>
   }
 
   void _play() {
-    Navigator.of(context).push(
-      MaterialPageRoute<void>(
-        builder: (_) => GameScreen(level: level01),
-      ),
-    );
+    Navigator.of(
+      context,
+    ).push(MaterialPageRoute<void>(builder: (_) => GameScreen(level: level01)));
   }
 
   void _showHelp() {
@@ -44,7 +42,10 @@ class _MainMenuScreenState extends State<MainMenuScreen>
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('1. Chạm vào ô trống để xây tháp Pigshooter (50 vàng).'),
+            Text(
+              '1. Chạm vào ô trống để xây tháp: Bắn Tên (50), '
+              'Đại Bác (75), Tên Lửa (100 vàng).',
+            ),
             SizedBox(height: 8),
             Text('2. Tháp tự bắn heo trong tầm; hạ heo để nhận vàng.'),
             SizedBox(height: 8),
@@ -75,7 +76,7 @@ class _MainMenuScreenState extends State<MainMenuScreen>
             child: AnimatedBuilder(
               animation: _bg,
               builder: (context, _) => CustomPaint(
-                painter: _DriftPainter(_bg.value, scheme.primary),
+                painter: MenuBackgroundPainter(_bg.value, scheme.primary),
               ),
             ),
           ),
@@ -87,10 +88,10 @@ class _MainMenuScreenState extends State<MainMenuScreen>
                 children: [
                   Text(
                     'BẮN HEO',
-                    style: Theme.of(context)
-                        .textTheme
-                        .displayMedium
-                        ?.copyWith(fontWeight: FontWeight.w900, letterSpacing: 6),
+                    style: Theme.of(context).textTheme.displayMedium?.copyWith(
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: 6,
+                    ),
                   ),
                   const SizedBox(height: 8),
                   Text(
@@ -98,12 +99,12 @@ class _MainMenuScreenState extends State<MainMenuScreen>
                     style: Theme.of(context).textTheme.titleMedium,
                   ),
                   const SizedBox(height: 40),
-                  _MenuButton(label: 'Chơi', onPressed: _play, primary: true),
+                  MenuButton(label: 'Chơi', onPressed: _play, primary: true),
                   const SizedBox(height: 14),
-                  _MenuButton(label: 'Hướng dẫn', onPressed: _showHelp),
+                  MenuButton(label: 'Hướng dẫn', onPressed: _showHelp),
                   if (!kIsWeb) ...[
                     const SizedBox(height: 14),
-                    _MenuButton(label: 'Thoát', onPressed: _quit),
+                    MenuButton(label: 'Thoát', onPressed: _quit),
                   ],
                 ],
               ),
@@ -113,56 +114,4 @@ class _MainMenuScreenState extends State<MainMenuScreen>
       ),
     );
   }
-}
-
-class _MenuButton extends StatelessWidget {
-  const _MenuButton({
-    required this.label,
-    required this.onPressed,
-    this.primary = false,
-  });
-
-  final String label;
-  final VoidCallback onPressed;
-  final bool primary;
-
-  @override
-  Widget build(BuildContext context) {
-    final style = FilledButton.styleFrom(
-      minimumSize: const Size(220, 52),
-      textStyle: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-    );
-    return primary
-        ? FilledButton(onPressed: onPressed, style: style, child: Text(label))
-        : FilledButton.tonal(
-            onPressed: onPressed, style: style, child: Text(label));
-  }
-}
-
-class _DriftPainter extends CustomPainter {
-  _DriftPainter(this.t, this.color);
-
-  final double t;
-  final Color color;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    canvas.drawRect(
-      Offset.zero & size,
-      Paint()..color = const Color(0xFF12321A),
-    );
-    final paint = Paint()..color = color.withValues(alpha: 0.12);
-    for (var i = 0; i < 14; i++) {
-      final phase = (t + i / 14) % 1.0;
-      final x = (size.width + 160) * phase - 80;
-      final y = size.height * ((i * 0.137) % 1.0);
-      final r = 24.0 + (i % 5) * 12.0;
-      canvas.drawCircle(Offset(x, y + 20 * math.sin(phase * math.pi * 2)), r,
-          paint);
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant _DriftPainter oldDelegate) =>
-      oldDelegate.t != t || oldDelegate.color != color;
 }

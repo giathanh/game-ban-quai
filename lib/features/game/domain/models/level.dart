@@ -18,8 +18,7 @@ class WaveData {
   final List<SpawnGroup> groups;
 
   /// Total enemies released by this wave.
-  int get totalEnemies =>
-      groups.fold(0, (sum, group) => sum + group.count);
+  int get totalEnemies => groups.fold(0, (sum, group) => sum + group.count);
 }
 
 /// Static stats for the single enemy type in this slice (Heo / pig).
@@ -39,18 +38,41 @@ class EnemyStats {
   final int livesOnLeak;
 }
 
-/// Static stats for a tower type. This slice only ships the Pigshooter.
+/// Visual + behavioural family a tower belongs to. Drives which artwork the
+/// [Tower] paints and which projectile it fires.
+enum TowerKind {
+  /// Cheap, fast, single-target crossbow.
+  arrow,
+
+  /// Slow, heavy shot that also damages everything around the point of impact.
+  cannon,
+
+  /// Long-range bolt that sets its target on fire for damage over time.
+  flamingArrow,
+}
+
+/// Static stats for a tower type.
 class TowerStats {
   const TowerStats({
+    required this.kind,
     required this.name,
+    required this.description,
     required this.cost,
     required this.rangeCells,
     required this.fireRate,
     required this.damage,
     required this.projectileSpeed,
+    this.splashRadiusCells = 0,
+    this.splashDamageFactor = 0.5,
+    this.burnDps = 0,
+    this.burnDuration = 0,
   });
 
+  final TowerKind kind;
   final String name;
+
+  /// One-line pitch shown in the build menu.
+  final String description;
   final int cost;
 
   /// Range measured in grid cells.
@@ -58,10 +80,29 @@ class TowerStats {
 
   /// Shots per second.
   final double fireRate;
+
+  /// Direct hit damage.
   final double damage;
 
   /// Projectile travel speed in pixels per second.
   final double projectileSpeed;
+
+  /// Radius (in grid cells) of the area hit on impact. 0 means single target.
+  final double splashRadiusCells;
+
+  /// Fraction of [damage] dealt to enemies caught in the splash (not the
+  /// primary target, who always takes the full hit).
+  final double splashDamageFactor;
+
+  /// Damage per second applied by the burn left on a hit target. 0 means no
+  /// burn.
+  final double burnDps;
+
+  /// How long (seconds) the burn lasts. Re-hitting refreshes rather than stacks.
+  final double burnDuration;
+
+  bool get hasSplash => splashRadiusCells > 0;
+  bool get hasBurn => burnDps > 0 && burnDuration > 0;
 }
 
 /// Declarative definition of a level.
@@ -78,7 +119,7 @@ class LevelData {
     required this.buildSpotCells,
     required this.waves,
     required this.enemy,
-    required this.pigshooter,
+    required this.towers,
   });
 
   final String name;
@@ -102,7 +143,9 @@ class LevelData {
 
   final List<WaveData> waves;
   final EnemyStats enemy;
-  final TowerStats pigshooter;
+
+  /// Tower types the player may build on this level, in menu order.
+  final List<TowerStats> towers;
 
   double get width => gridCols * cellSize;
   double get height => gridRows * cellSize;
@@ -112,5 +155,6 @@ class LevelData {
       Vector2((cell.x + 0.5) * cellSize, (cell.y + 0.5) * cellSize);
 
   /// Path waypoints resolved to pixel coordinates.
-  List<Vector2> pathPixels() => pathCells.map(cellToPixel).toList(growable: false);
+  List<Vector2> pathPixels() =>
+      pathCells.map(cellToPixel).toList(growable: false);
 }

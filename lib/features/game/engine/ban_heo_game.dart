@@ -2,10 +2,11 @@ import 'package:flame/components.dart';
 import 'package:flame/game.dart';
 import 'package:flutter/material.dart';
 
-import '../data/level.dart';
+import '../domain/models/level.dart';
 import 'components/build_spot.dart';
 import 'components/enemy.dart';
 import 'components/path_component.dart';
+import 'components/terrain_background.dart';
 import 'components/tower.dart';
 import 'systems/economy.dart';
 import 'systems/wave_spawner.dart';
@@ -62,15 +63,15 @@ class BanHeoGame extends FlameGame {
   bool get isInteractionLocked => _ended || paused;
 
   @override
-  Color backgroundColor() => const Color(0xFF2E7D32);
+  Color backgroundColor() => const Color(0xFF5AA24C);
 
   @override
   Future<void> onLoad() async {
     camera.viewfinder.anchor = Anchor.topLeft;
 
-    world.add(_GridBackground(level: level));
+    world.add(TerrainBackground(level: level, pathPixels: _pathPixels));
     world.add(
-      PathComponent(waypoints: _pathPixels, laneWidth: level.cellSize * 0.7),
+      PathComponent(waypoints: _pathPixels, laneWidth: level.cellSize * 0.82),
     );
 
     for (final cell in level.buildSpotCells) {
@@ -162,17 +163,18 @@ class BanHeoGame extends FlameGame {
 
   void closeSpotMenu() => selectedSpot.value = null;
 
-  /// Attempts to build a Pigshooter on [spot]. Returns whether it succeeded.
-  bool buildPigshooter(BuildSpot spot) {
+  /// Attempts to build the tower described by [stats] on [spot]. Returns whether
+  /// it succeeded.
+  bool buildTower(BuildSpot spot, TowerStats stats) {
     if (_ended || spot.isOccupied) {
       return false;
     }
-    if (!economy.trySpend(level.pigshooter.cost)) {
+    if (!economy.trySpend(stats.cost)) {
       return false;
     }
     final tower = Tower(
       position: spot.position.clone(),
-      stats: level.pigshooter,
+      stats: stats,
       cellSize: level.cellSize,
     );
     spot.tower = tower;
@@ -219,28 +221,5 @@ class BanHeoGame extends FlameGame {
   void onRemove() {
     disposeResources();
     super.onRemove();
-  }
-}
-
-/// Faint grid lines so the play-field reads as a grid.
-class _GridBackground extends PositionComponent {
-  _GridBackground({required this.level}) : super(priority: -20);
-
-  final LevelData level;
-
-  final Paint _linePaint = Paint()
-    ..color = const Color(0x22000000)
-    ..strokeWidth = 1;
-
-  @override
-  void render(Canvas canvas) {
-    for (var c = 0; c <= level.gridCols; c++) {
-      final x = c * level.cellSize;
-      canvas.drawLine(Offset(x, 0), Offset(x, level.height), _linePaint);
-    }
-    for (var r = 0; r <= level.gridRows; r++) {
-      final y = r * level.cellSize;
-      canvas.drawLine(Offset(0, y), Offset(level.width, y), _linePaint);
-    }
   }
 }
