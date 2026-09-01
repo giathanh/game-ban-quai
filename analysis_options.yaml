@@ -1,0 +1,88 @@
+# Cấu hình cho Dart analyzer + linter của dự án Ban Heo (Flutter + Flame).
+#
+# Chạy kiểm tra bằng: `flutter analyze`
+# Tài liệu lint: https://dart.dev/lints
+# Danh sách lint: https://dart.dev/tools/linter-rules
+
+include: package:flutter_lints/flutter.yaml
+
+analyzer:
+  # Bật các chế độ kiểm tra kiểu chặt chẽ hơn.
+  language:
+    strict-casts: true
+    strict-inference: true
+    strict-raw-types: true
+
+  # Coi một số cảnh báo dễ gây bug là lỗi (fail CI).
+  errors:
+    # Không cho phép TODO/FIXME làm rớt build, chỉ nhắc nhở.
+    todo: ignore
+    # Các vấn đề nghiêm trọng -> lỗi.
+    invalid_annotation_target: error
+    missing_required_param: error
+    missing_return: error
+    dead_code: warning
+    unused_import: warning
+    unused_local_variable: warning
+    unused_element: warning
+    always_declare_return_types: error
+    prefer_const_constructors: warning
+
+  exclude:
+    - "**/*.g.dart"
+    - "**/*.freezed.dart"
+    - "**/*.gen.dart"
+    - "**/*.mocks.dart"
+    - "build/**"
+    - "lib/generated/**"
+    - "test/tmp_probe/**"
+
+linter:
+  rules:
+    # --- Style / nhất quán ---
+    always_declare_return_types: true
+    always_put_required_named_parameters_first: true
+    avoid_redundant_argument_values: true
+    avoid_unnecessary_containers: true
+    avoid_void_async: true
+    combinators_ordering: true
+    directives_ordering: true
+    eol_at_end_of_file: true
+    prefer_single_quotes: true
+    prefer_relative_imports: true
+    sort_child_properties_last: true
+    sort_constructors_first: true
+    unnecessary_breaks: true
+    unnecessary_parenthesis: true
+    use_string_buffers: true
+
+    # --- An toàn / tránh bug ---
+    always_use_package_imports: false
+    avoid_dynamic_calls: true
+    avoid_slow_async_io: true
+    avoid_type_to_string: true
+    cancel_subscriptions: true
+    close_sinks: true
+    collection_methods_unrelated_type: true
+    no_adjacent_strings_in_list: true
+    prefer_final_locals: true
+    prefer_final_in_for_each: true
+    test_types_in_equals: true
+    throw_in_finally: true
+    unawaited_futures: true
+    unnecessary_statements: true
+    use_build_context_synchronously: true
+
+    # --- Hiệu năng game loop (Flame) ---
+    prefer_const_constructors: true
+    prefer_const_constructors_in_immutables: true
+    prefer_const_declarations: true
+    prefer_const_literals_to_create_immutables: true
+
+    # --- Tài liệu ---
+    public_member_api_docs: false
+
+    # --- Tắt các rule quá ồn cho code game ---
+    avoid_print: false            # dùng cho debug trong khi phát triển
+    lines_longer_than_80_chars: false
+    flutter_style_todos: false
