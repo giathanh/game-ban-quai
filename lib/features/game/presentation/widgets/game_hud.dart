@@ -26,10 +26,6 @@ class GameHud extends StatelessWidget {
         return Container(
           margin: const EdgeInsets.all(8),
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-          decoration: BoxDecoration(
-            color: Colors.black.withValues(alpha: 0.55),
-            borderRadius: BorderRadius.circular(12),
-          ),
           child: Row(
             children: [
               // The stat cluster scrolls horizontally so it can never push the
@@ -103,12 +99,20 @@ class _UpgradeChip extends StatelessWidget {
   Widget build(BuildContext context) {
     final parts = <(IconData, String)>[
       if (levels.range > 0)
-        (Icons.my_location, '+${trackFor(UpgradeAxis.range).percentAt(levels.range)}%'),
+        (
+          Icons.my_location,
+          '+${trackFor(UpgradeAxis.range).percentAt(levels.range)}%',
+        ),
       if (levels.damage > 0)
-        (Icons.bolt, '+${trackFor(UpgradeAxis.damage).percentAt(levels.damage)}%'),
+        (
+          Icons.bolt,
+          '+${trackFor(UpgradeAxis.damage).percentAt(levels.damage)}%',
+        ),
       if (levels.reload > 0)
-        (Icons.timer_outlined,
-            '${trackFor(UpgradeAxis.reload).percentAt(levels.reload)}%'),
+        (
+          Icons.timer_outlined,
+          '${trackFor(UpgradeAxis.reload).percentAt(levels.reload)}%',
+        ),
     ];
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -159,6 +163,7 @@ class _Stat extends StatelessWidget {
             color: Colors.white,
             fontWeight: FontWeight.bold,
             fontSize: 16,
+            shadows: [Shadow(color: Colors.black87, blurRadius: 3)],
           ),
         ),
       ],
