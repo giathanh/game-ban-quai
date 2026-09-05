@@ -10,6 +10,7 @@ import '../../domain/models/level.dart';
 import '../../engine/ban_heo_game.dart';
 import '../widgets/build_menu.dart';
 import '../widgets/game_hud.dart';
+import '../widgets/game_viewport.dart';
 import '../widgets/pause_overlay.dart';
 
 class GameScreen extends StatefulWidget {
@@ -171,12 +172,14 @@ class _GameScreenState extends State<GameScreen> {
         fit: StackFit.expand,
         children: [
           Positioned.fill(
-            child: FittedBox(
-              fit: BoxFit.fill,
-              child: SizedBox(
-                width: widget.level.width,
-                height: widget.level.height,
-                child: GameWidget(game: _game),
+            child: GameViewport(
+              child: FittedBox(
+                fit: BoxFit.fill,
+                child: SizedBox(
+                  width: widget.level.width,
+                  height: widget.level.height,
+                  child: GameWidget(game: _game),
+                ),
               ),
             ),
           ),

@@ -8,6 +8,37 @@ import 'package:flutter_test/flutter_test.dart';
 import 'support/load_level.dart';
 
 void main() {
+  testWidgets('build spots remain tappable after perspective zoom', (
+    tester,
+  ) async {
+    final level = loadLevelFromFile('assets/levels/level_01.tmx');
+    await tester.pumpWidget(MaterialApp(home: GameScreen(level: level)));
+    for (var i = 0; i < 10; i++) {
+      await tester.pump(const Duration(milliseconds: 16));
+    }
+    final field = find.byType(GameWidget<BanHeoGame>);
+    final game = tester.widget<GameWidget<BanHeoGame>>(field).game!;
+    await tester.tap(find.byTooltip('Phóng to'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
+    final cell = level.buildSpotCells.reduce(
+      (a, b) =>
+          (level.cellToPixel(a) - Vector2(level.width / 2, level.height / 2))
+                  .length <
+              (level.cellToPixel(b) -
+                      Vector2(level.width / 2, level.height / 2))
+                  .length
+          ? a
+          : b,
+    );
+    final position = level.cellToPixel(cell);
+    final box = tester.renderObject<RenderBox>(field);
+    await tester.tapAt(box.localToGlobal(Offset(position.x, position.y)));
+    await tester.pump(const Duration(milliseconds: 100));
+    expect(game.selectedSpot.value, isNotNull);
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('playfield fills a wide phone while HUD avoids the cutout', (
     tester,
   ) async {
