@@ -27,7 +27,7 @@ class BuildSpot extends PositionComponent
     ..strokeWidth = 2;
 
   @override
-  void onTapDown(TapDownEvent event) {
+  void onTapUp(TapUpEvent event) {
     if (game.isInteractionLocked) {
       return;
     }

@@ -14,18 +14,31 @@ class OrientationLock {
       (defaultTargetPlatform == TargetPlatform.android ||
           defaultTargetPlatform == TargetPlatform.iOS);
 
-  static Future<void> landscape() {
-    if (!_isMobile) return Future<void>.value();
-    return SystemChrome.setPreferredOrientations(const <DeviceOrientation>[
+  static Future<void> landscape() async {
+    if (!_isMobile) return;
+    await SystemChrome.setPreferredOrientations(const <DeviceOrientation>[
       DeviceOrientation.landscapeLeft,
       DeviceOrientation.landscapeRight,
     ]);
+    await _setFullscreen(true);
   }
 
-  static Future<void> portrait() {
-    if (!_isMobile) return Future<void>.value();
-    return SystemChrome.setPreferredOrientations(const <DeviceOrientation>[
+  static Future<void> portrait() async {
+    if (!_isMobile) return;
+    await SystemChrome.setPreferredOrientations(const <DeviceOrientation>[
       DeviceOrientation.portraitUp,
     ]);
+    await _setFullscreen(false);
+  }
+
+  static Future<void> _setFullscreen(bool enabled) async {
+    await SystemChrome.setEnabledSystemUIMode(
+      enabled ? SystemUiMode.immersiveSticky : SystemUiMode.edgeToEdge,
+    );
+    if (defaultTargetPlatform == TargetPlatform.android) {
+      await const MethodChannel(
+        'ban_heo/display',
+      ).invokeMethod<void>('setFullscreen', enabled);
+    }
   }
 }
