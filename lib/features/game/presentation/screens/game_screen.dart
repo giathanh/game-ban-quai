@@ -167,21 +167,31 @@ class _GameScreenState extends State<GameScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFF12321A),
-      body: SafeArea(
-        child: Stack(
-          fit: StackFit.expand,
-          children: [
-            Positioned.fill(child: GameWidget(game: _game)),
-            Positioned(
-              left: 0,
-              right: 0,
-              top: 0,
+      body: Stack(
+        fit: StackFit.expand,
+        children: [
+          Positioned.fill(
+            child: FittedBox(
+              fit: BoxFit.fill,
+              child: SizedBox(
+                width: widget.level.width,
+                height: widget.level.height,
+                child: GameWidget(game: _game),
+              ),
+            ),
+          ),
+          Positioned(
+            left: 0,
+            right: 0,
+            top: 0,
+            child: SafeArea(
+              bottom: false,
               child: GameHud(game: _game, onPause: _togglePause),
             ),
-            BuildMenu(game: _game),
-            if (_paused) PauseOverlay(onResume: _togglePause),
-          ],
-        ),
+          ),
+          SafeArea(child: BuildMenu(game: _game)),
+          if (_paused) PauseOverlay(onResume: _togglePause),
+        ],
       ),
     );
   }
